@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>근비대 2분할 워크아웃 로거</title>
+    
+    <!-- Chosen Palette: Warm Neutral (bg-slate-50) with Indigo Accent -->
+    <!-- Application Structure Plan: [HST의 엑셀 시트처럼 '기록'과 '점진적 과부하'에 초점을 맞춘 대화형 유틸리티입니다. 'full_weekly_routine.md' 리포트를 기반으로, 탭 인터페이스를 사용해 각 훈련일을 분리합니다. 핵심 기능은 JS와 localStorage를 사용한 데이터의 '저장' 및 '불러오기'입니다. 사용자가 세트별 무게와 횟수를 입력하고 저장하면, 다음 세션에서 "지난 기록"으로 표시되어 '더블 프로그레션'을 시각적으로 명확하게 지원합니다. 이는 "기록을 안 해서" 발생하는 문제를 직접적으로 해결하는 핵심 기능입니다.] -->
+    <!-- Visualization & Content Choices: [Report Info: 운동 목록 및 세트/반복. -> Goal: 사용자 입력 기록. -> Viz/Method: HTML 테이블과 <input> 필드. -> Interaction: 사용자가 무게/횟수 입력, JS가 localStorage에 '저장/불러오기' 수행. -> Justification: '메모장'보다 훨씬 체계적이며, '지난 기록'을 자동으로 보여줌으로써 점진적 과부하를 위한 명확한 타겟을 제공함.] -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
+        }
+        .tab-inactive {
+            background-color: #ffffff;
+            color: #475569; /* slate-600 */
+        }
+        .tab-active {
+            background-color: #4f46e5; /* indigo-600 */
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .workout-day {
+            display: none; 
+        }
+        .workout-day.active {
+            display: block;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            width: 5rem;
+            text-align: center;
+            border: 1px solid #cbd5e1; /* slate-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.5rem 0.25rem;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .last-record {
+            color: #64748b; /* slate-500 */
+            font-size: 0.875rem; /* text-sm */
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <main class="max-w-4xl mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">근비대 2분할 워크아웃 로거</h1>
+            <p class="text-lg text-slate-600">"더블 프로그레션"을 위한 훈련 기록 시트</p>
+        </header>
+
+        <section id="workout-planner" class="mb-8 md:mb-12">
+            <nav id="day-navigation" class="flex flex-wrap justify-center gap-2 md:gap-4 mb-6">
+                <button data-day="mon" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">월요일: 상체 (A)</button>
+                <button data-day="tue" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">화요일: 하체 (A)</button>
+                <button data-day="wed" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">수요일: 기능/회복</button>
+                <button data-day="thu" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">목요일: 상체 (B)</button>
+                <button data-day="fri" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">금요일: 하체 (B)</button>
+            </nav>
+
+            <div id="workout-content-wrapper" class="bg-white p-5 md:p-8 rounded-2xl shadow-lg">
+                
+                <!-- 월요일: 상체 (A) -->
+                <div id="workout-mon" class="workout-day space-y-6">
+                    <h3 class="text-2xl font-bold text-indigo-600 mb-4">월요일: 상체 (A) - 가슴/등 중심</h3>
+                    <div id="log-mon" class="space-y-4"></div>
+                    <button onclick="saveWorkout('mon')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">월요일 훈련 저장</button>
+                </div>
+
+                <!-- 화요일: 하체 (A) -->
+                <div id="workout-tue" class="workout-day space-y-6">
+                    <h3 class="text-2xl font-bold text-indigo-600 mb-4">화요일: 하체 (A) - 스쿼트 중심</h3>
+                    <div id="log-tue" class="space-y-4"></div>
+                    <button onclick="saveWorkout('tue')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">화요일 훈련 저장</button>
+                </div>
+
+                <!-- 수요일: 기능 & 회복 -->
+                <div id="workout-wed" class="workout-day">
+                    <h3 class="text-2xl font-bold text-indigo-600 mb-4">수요일: 기능 & 회복</h3>
+                    <p class="text-slate-700 mb-4">이 날은 시간 기반 훈련입니다. 완료 여부를 체크하세요.</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-3 bg-slate-50 rounded-lg">
+                            <input type="checkbox" class="h-5 w-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                            <span class="ml-3 text-slate-800 font-medium">달리기 인터벌 (HIIT) - 20분</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-slate-50 rounded-lg">
+                            <input type="checkbox" class="h-5 w-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                            <span class="ml-3 text-slate-800 font-medium">폼롤러 (전신) - 10-15분</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-slate-50 rounded-lg">
+                            <input type="checkbox" class="h-5 w-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                            <span class="ml-3 text-slate-800 font-medium">모빌리티 드릴 - 10분</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 목요일: 상체 (B) -->
+                <div id="workout-thu" class="workout-day space-y-6">
+                    <h3 class="text-2xl font-bold text-indigo-600 mb-4">목요일: 상체 (B) - 어깨/등 중심</h3>
+                    <div id="log-thu" class="space-y-4"></div>
+                    <button onclick="saveWorkout('thu')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">목요일 훈련 저장</button>
+                </div>
+
+                <!-- 금요일: 하체 (B) -->
+                <div id="workout-fri" class="workout-day space-y-6">
+                    <h3 class="text-2xl font-bold text-indigo-600 mb-4">금요일: 하체 (B) - 후면 사슬 중심</h3>
+                    <div id="log-fri" class="space-y-4"></div>
+                    <button onclick="saveWorkout('fri')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">금요일 훈련 저장</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center p-6 mt-8 text-slate-500 text-sm">
+        <p>이 기록은 사용자의 브라우저(Local Storage)에만 저장됩니다.</p>
+    </footer>
+
+    <script>
+        // full_weekly_routine.md의 데이터를 JS 객체로 변환
+        const routineData = {
+            'mon': [
+                { name: '벤치 프레스 (플랫)', target: '4 x 6-10회', sets: 4 },
+                { name: 'T-바 로우 (머신)', target: '4 x 8-12회', sets: 4 },
+                { name: '인클라인 덤벨 프레스', target: '3 x 10-12회', sets: 3 },
+                { name: '랫풀다운 (와이드 그립)', target: '3 x 10-15회', sets: 3 },
+                { name: '사이드 래터럴 레이즈', target: '3 x 12-20회', sets: 3 },
+                { name: '(선택) 덤벨 컬 (이두)', target: '3 x 12-15회', sets: 3 },
+                { name: '(선택) 케이블 푸시다운 (삼두)', target: '3 x 12-15회', sets: 3 }
+            ],
+            'tue': [
+                { name: '스쿼트 (바벨)', target: '4 x 6-10회', sets: 4 },
+                { name: '레그 프레스', target: '3 x 10-15회', sets: 3 },
+                { name: '라잉 레그 컬', target: '3 x 10-15회', sets: 3 },
+                { name: '원 레그 덤벨 카프 레이즈', target: '3 x 15-20회', sets: 3 },
+                { name: '플랭크', target: '3 x 60초+', sets: 3 }
+            ],
+            'thu': [
+                { name: '오버헤드 프레스(OHP)', target: '4 x 6-10회', sets: 4 },
+                { name: '풀업 (or 머신 풀다운)', target: '4 x 8-12회', sets: 4 },
+                { name: 'T-바 로우 (머신)', target: '3 x 10-12회', sets: 3 },
+                { name: '덤벨 벤치 프레스', target: '3 x 10-15회', sets: 3 },
+                { name: '페이스풀', target: '3 x 15-20회', sets: 3 },
+                { name: '(선택) 덤벨 컬 (이두)', target: '3 x 12-15회', sets: 3 },
+                { name: '(선택) 케이블 푸시다운 (삼두)', target: '3 x 12-15회', sets: 3 }
+            ],
+            'fri': [
+                { name: '라잉 레그 컬', target: '4 x 10-15회', sets: 4 },
+                { name: '힙 쓰러스트', target: '4 x 10-15회', sets: 4 },
+                { name: '런지 (or 불스스)', target: '3 x 8-12회', sets: 3 },
+                { name: '레그 익스텐션', target: '3 x 10-15회', sets: 3 },
+                { name: '시티드 덤벨 카프 레이즈', target: '3 x 15-20회', sets: 3 },
+                { name: '행잉 레그 레이즈', target: '3 x 15-20회', sets: 3 }
+            ]
+        };
+
+        function createExerciseInputs(day) {
+            const container = document.getElementById(`log-${day}`);
+            if (!container) return;
+            
+            const workoutLog = loadWorkout(day); // 저장된 데이터 불러오기
+            container.innerHTML = ''; // 컨테이너 초기화
+
+            routineData[day].forEach((exercise, exIndex) => {
+                const exContainer = document.createElement('div');
+                exContainer.className = 'p-4 border border-slate-200 rounded-lg';
+                
+                let lastRecordHtml = '지난 기록 없음';
+                let lastWeight = '';
+                
+                if (workoutLog && workoutLog[exIndex]) {
+                    lastRecordHtml = workoutLog[exIndex].sets.map(set => `${set.weight}kg x ${set.reps}회`).join(', ');
+                    lastWeight = workoutLog[exIndex].sets[0] ? workoutLog[exIndex].sets[0].weight : '';
+                }
+
+                // Extract rep range for placeholder
+                let repPlaceholder = '횟수';
+                if (exercise.target) {
+                    const targetParts = exercise.target.split('x');
+                    if (targetParts.length > 1) {
+                        repPlaceholder = targetParts[1].trim().replace('회', '').replace('(한 발당)', '').replace('+', '초+');
+                    }
+                }
+
+                let inputsHtml = '';
+                for (let i = 0; i < exercise.sets; i++) {
+                    inputsHtml += `
+                        <div class="flex items-center space-x-2">
+                            <span class="font-medium text-slate-600">${i + 1}세트:</span>
+                            <input type="number" id="${day}-${exIndex}-weight-${i}" placeholder="무게(kg)" class="w-20" value="${lastWeight}">
+                            <span class="text-slate-500">x</span>
+                            <input type="number" id="${day}-${exIndex}-reps-${i}" placeholder="${repPlaceholder}" class="w-20">
+                        </div>
+                    `;
+                }
+
+                exContainer.innerHTML = `
+                    <div class="flex justify-between items-baseline mb-3">
+                        <h4 class="text-lg font-semibold text-slate-800">${exercise.name}</h4>
+                        <span class="text-sm font-medium text-indigo-600">${exercise.target}</span>
+                    </div>
+                    <div class="mb-3 p-2 bg-slate-50 rounded">
+                        <span class="last-record"><span class="font-medium text-slate-600">지난 기록:</span> ${lastRecordHtml}</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        ${inputsHtml}
+                    </div>
+                `;
+                container.appendChild(exContainer);
+            });
+        }
+
+        function saveWorkout(day) {
+            const exercises = routineData[day];
+            const newLog = [];
+            
+            exercises.forEach((exercise, exIndex) => {
+                const exerciseData = { name: exercise.name, sets: [] };
+                for (let i = 0; i < exercise.sets; i++) {
+                    const weight = document.getElementById(`${day}-${exIndex}-weight-${i}`).value;
+                    const reps = document.getElementById(`${day}-${exIndex}-reps-${i}`).value;
+                    exerciseData.sets.push({ weight: weight || 0, reps: reps || 0 });
+                }
+                newLog.push(exerciseData);
+            });
+
+            try {
+                localStorage.setItem(`workoutLog-${day}`, JSON.stringify(newLog));
+                alert(`${day.toUpperCase()} 훈련 기록이 브라우저에 저장되었습니다!`);
+                // 저장 후 즉시 다시 로드하여 "지난 기록" 업데이트
+                createExerciseInputs(day);
+            } catch (e) {
+                console.error("저장 실패:", e);
+                alert("기록 저장에 실패했습니다.");
+            }
+        }
+
+        function loadWorkout(day) {
+            try {
+                const data = localStorage.getItem(`workoutLog-${day}`);
+                return data ? JSON.parse(data) : null;
+            } catch (e) {
+                console.error("불러오기 실패:", e);
+                return null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('#day-navigation button');
+            const days = document.querySelectorAll('.workout-day');
+            
+            function showDay(dayId) {
+                days.forEach(day => {
+                    day.classList.toggle('active', day.id === `workout-${dayId}`);
+                });
+                
+                tabs.forEach(tab => {
+                    tab.classList.toggle('tab-active', tab.dataset.day === dayId);
+                    tab.classList.toggle('tab-inactive', tab.dataset.day !== dayId);
+                });
+
+                // '수요일'이 아닌 경우에만 입력 필드 생성
+                if (dayId !== 'wed') {
+                    createExerciseInputs(dayId);
+                }
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    showDay(tab.dataset.day);
+                });
+            });
+
+            // 오늘 요일에 맞는 탭 자동 활성화
+            const today = new Date().getDay();
+            let dayId;
+            
+            switch(today) {
+                case 1: dayId = 'mon'; break;
+                case 2: dayId = 'tue'; break;
+                case 3: dayId = 'wed'; break;
+                case 4: dayId = 'thu'; break;
+                case 5: dayId = 'fri'; break;
+                default: dayId = 'mon'; // 주말은 월요일로
+            }
+            showDay(dayId);
+        });
+    </script>
+
+</body>
+</html>
