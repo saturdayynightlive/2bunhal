@@ -5,46 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>상체 집중 워크아웃 로거</title>
     
+    <!-- Chosen Palette: Warm Neutral (bg-slate-50) with Indigo Accent -->
+    <!-- Application Structure Plan: [사용자의 최종 루틴 'fashion_muscle_routine.md'(Push/Pull 상체 2분할, 무릎 회복)에 맞춰 재설계되었습니다. 탭 인터페이스는 'Push', 'Pull', '휴식/기능'을 반영합니다. 핵심 기능은 JS와 localStorage를 사용한 데이터의 '저장' 및 '불러오기'입니다. 사용자가 'Push' 훈련을 기록하고 저장하면, 다음 'Push' 훈련일에 "지난 기록"으로 표시되어 '더블 프로그레션'을 시각적으로 명확하게 지원합니다. 이는 "기록을 안 해서" 발생하는 문제를 직접적으로 해결하는 핵심 기능입니다.] -->
+    <!-- Visualization & Content Choices: [Report Info: Push/Pull/Rest 운동 목록. -> Goal: 사용자 입력 기록. -> Viz/Method: HTML 테이블과 <input> 필드. -> Interaction: 사용자가 무게/횟수 입력, JS가 localStorage에 '저장/불러오기' 수행. -> Justification: '메모장'보다 훨씬 체계적이며, '지난 기록'을 자동으로 보여줌으로써 점진적 과부하를 위한 명확한 타겟을 제공함.] -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        body {
-            font-family: 'Inter', 'Noto Sans KR', sans-serif;
-            background-color: #f8fafc; /* bg-slate-50 */
-        }
-        .tab-inactive {
-            background-color: #ffffff;
-            color: #475569; /* slate-600 */
-        }
-        .tab-active {
-            background-color: #4f46e5; /* indigo-600 */
-            color: #ffffff;
-            font-weight: 700;
-        }
-        .workout-day {
-            display: none; 
-        }
-        .workout-day.active {
-            display: block;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-            width: 5rem;
-            text-align: center;
-            border: 1px solid #cbd5e1; /* slate-300 */
-            border-radius: 0.375rem; /* rounded-md */
-            padding: 0.5rem 0.25rem;
-        }
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .last-record {
-            color: #64748b; /* slate-500 */
-            font-size: 0.875rem; /* text-sm */
-        }
+        body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        .tab-inactive { background-color: #ffffff; color: #475569; }
+        .tab-active { background-color: #4f46e5; color: #ffffff; font-weight: 700; }
+        .workout-day { display: none; }
+        .workout-day.active { display: block; }
+        input[type="number"] { -moz-appearance: textfield; width: 5rem; text-align: center; border: 1px solid #cbd5e1; border-radius: 0.375rem; padding: 0.5rem 0.25rem; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .last-record { color: #64748b; font-size: 0.875rem; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -52,28 +29,30 @@
     <main class="max-w-4xl mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">상체 집중 워크아웃 로거</h1>
-            <p class="text-lg text-slate-600">"패션근육" 2분할 훈련 기록 시트</p>
+            <p class="text-lg text-slate-600">"패션근육" 2분할 (무릎 회복 ver.)</p>
         </header>
 
         <section id="workout-planner" class="mb-8 md:mb-12">
             <nav id="day-navigation" class="flex flex-wrap justify-center gap-2 md:gap-4 mb-6">
                 <button data-day="push" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">Push (미는 날)</button>
                 <button data-day="pull" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">Pull (당기는 날)</button>
-                <button data-day="rest" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">휴식 (수/토/일)</button>
+                <button data-day="rest" class="tab-inactive py-3 px-5 rounded-xl font-semibold w-full sm:w-auto">휴식/기능</button>
             </nav>
 
             <div id="workout-content-wrapper" class="bg-white p-5 md:p-8 rounded-2xl shadow-lg">
                 
+                <!-- Push (미는 날) - 월/목 -->
                 <div id="workout-push" class="workout-day space-y-6">
                     <h3 class="text-2xl font-bold text-indigo-600 mb-4">Push (미는 날) - 가슴/어깨/삼두</h3>
+                    <p class="text-slate-600">모든 세트를 "실패지점"까지 수행하고 기록하세요.</p>
                     <div id="log-push" class="space-y-4"></div>
-                    <button onclick="saveWorkout('push')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Push 훈련 저장</button>
+                    <button onclick="saveWorkout('push')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Push 훈련 저장</Gbutton>
                 </div>
-                
-                
+
                 <!-- Pull (당기는 날) - 화/금 -->
                 <div id="workout-pull" class="workout-day space-y-6">
                     <h3 class="text-2xl font-bold text-teal-600 mb-4">Pull (당기는 날) - 등/어깨후면/이두</h3>
+                    <p class="text-slate-600">"패션근육"의 핵심인 후면어깨(페이스풀)에 집중하세요.</p>
                     <div id="log-pull" class="space-y-4"></div>
                     <button onclick="saveWorkout('pull')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Pull 훈련 저장</button>
                 </div>
@@ -81,27 +60,27 @@
                 <!-- 휴식 (수/토/일) -->
                 <div id="workout-rest" class="workout-day space-y-6">
                     <h3 class="text-2xl font-bold text-gray-700 mb-4">휴식 및 기능의 날 (수/토/일)</h3>
-                    <p class="text-slate-600">이 날은 무릎 회복과 "패션근육"을 위한 기능 훈련일입니다. (하체 휴식)</p>
+                    <p class="text-slate-600">무릎 힘줄(염증)에 충격을 주지 않는 '사이클'로 심폐 기능을 훈련합니다.</p>
                     <div id="log-rest" class="space-y-4"></div>
                     <button onclick="saveWorkout('rest')" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">기능 훈련 저장</button>
                 </div>
 
-            </div> <!-- #workout-content-wrapper 닫기 -->
-    </main> <!-- main 닫기 -->
-    
+            </div>
+        </section>
+    </main>
+
     <footer class="text-center p-6 mt-8 text-slate-500 text-sm">
-        <p>&copy; 2025 Workout Logger. 'fashion_muscle_routine.md' 기반.</p>
+        <p>&copy; 2025 Workout Logger. 'fashion_muscle_routine.md' (v2) 기반.</p>
         <p class="mt-2">
             <button onclick="clearAllData()" class="text-xs text-slate-400 hover:text-red-500 underline">모든 기록 초기화 (주의)</button>
         </p>
     </footer>
 
     <script>
-        
         const routineData = {
             "push": [
                 { id: "push_1", name: "인클라인 벤치 프레스", sets: 4, reps: "8-10" },
-                { id: "push_2", name: "딥스 (or 체스트 프레스 머신)", sets: 3, reps: "10-12" },
+                { id: "push_2", name: "딥스 (or 체스트 프레스)", sets: 3, reps: "10-12" },
                 { id: "push_3", name: "오버헤드 프레스 (OHP)", sets: 3, reps: "8-10" },
                 { id: "push_4", name: "사이드 래터럴 레이즈", sets: 5, reps: "12-15" },
                 { id: "push_5", name: "케이블 푸시다운", sets: 3, reps: "12-15" }
@@ -114,20 +93,18 @@
                 { id: "pull_5", name: "(선택) 케이블 푸시다운", sets: 3, reps: "12-15" }
             ],
             "rest": [
-                { id: "rest_1", name: "달리기 인터벌 (HIIT)", sets: 1, reps: "20분" },
+                { id: "rest_1", name: "사이클 인터벌 (HIIT)", sets: 1, reps: "20분" },
                 { id: "rest_2", name: "폼롤러 (전신)", sets: 1, reps: "10-15분" },
-                { id: "rest_3", name: "모빌리티 드릴 (하체/흉추)", sets: 1, reps: "10분" }
+                { id: "rest_3", name: "모빌리티 드릴 (상체/흉추)", sets: 1, reps: "10분" }
             ]
         };
 
-        
         function createExerciseHTML(day, exercise) {
             let setsHTML = '';
             for (let i = 1; i <= exercise.sets; i++) {
                 const weightId = `weight-${exercise.id}-${i}`;
                 const repsId = `reps-${exercise.id}-${i}`;
                 const lastRecordId = `last-${exercise.id}-${i}`;
-
                 setsHTML += `
                     <div class="flex items-center justify-between">
                         <label for="${weightId}" class="font-medium text-slate-700">Set ${i}</label>
@@ -140,7 +117,6 @@
                     </div>
                 `;
             }
-
             return `
                 <div class="border border-slate-200 p-4 rounded-lg bg-slate-50">
                     <h4 class="font-semibold text-lg text-slate-800 mb-3">${exercise.name}</h4>
@@ -151,25 +127,21 @@
             `;
         }
 
-        
         function saveWorkout(day) {
             const dayExercises = routineData[day];
             let logData = { timestamp: new Date().toLocaleString('ko-KR') };
-
             dayExercises.forEach(exercise => {
                 let sets = [];
                 for (let i = 1; i <= exercise.sets; i++) {
-                    const weight = document.getElementById(`weight-${exercise.id}-${i}`).value;
-                    const reps = document.getElementById(`reps-${exercise.id}-${i}`).value;
+                    const weight = document.getElementById(`weight-${exercise.id}-${i}`)?.value;
+                    const reps = document.getElementById(`reps-${exercise.id}-${i}`)?.value;
                     sets.push({ weight: weight, reps: reps });
                 }
                 logData[exercise.id] = sets;
             });
-
             try {
                 localStorage.setItem(`workoutLog_${day}`, JSON.stringify(logData));
                 alert(`${day.toUpperCase()} 훈련 기록이 저장되었습니다!`);
-                
                 updateLastRecordDisplay(day, logData);
             } catch (e) {
                 console.error("LocalStorage 저장 실패:", e);
@@ -177,31 +149,24 @@
             }
         }
 
-        
         function loadWorkout(day) {
             const dayExercises = routineData[day];
             let lastLogData = null;
             try {
                 lastLogData = JSON.parse(localStorage.getItem(`workoutLog_${day}`));
             } catch (e) {
-                console.error("LocalStorage 불러오기 실패:", e);
                 lastLogData = null;
             }
-
-            
             const logContainer = document.getElementById(`log-${day}`);
-            logContainer.innerHTML = ''; 
+            logContainer.innerHTML = '';
             dayExercises.forEach(exercise => {
                 logContainer.innerHTML += createExerciseHTML(day, exercise);
             });
-
-            
             if (lastLogData) {
                 updateLastRecordDisplay(day, lastLogData);
             }
         }
 
-        
         function updateLastRecordDisplay(day, logData) {
             const dayExercises = routineData[day];
             dayExercises.forEach(exercise => {
@@ -210,10 +175,12 @@
                         const lastRecordEl = document.getElementById(`last-${exercise.id}-${i}`);
                         if (lastRecordEl && logData[exercise.id][i-1]) {
                             const lastSet = logData[exercise.id][i-1];
+                            const weightText = lastSet.weight || "0";
+                            const repsText = lastSet.reps || "0";
                             if (lastSet.weight && lastSet.reps) {
-                                lastRecordEl.textContent = `(지난: ${lastSet.weight}kg x ${lastSet.reps}회)`;
-                            } else if (lastSet.reps) { 
-                                lastRecordEl.textContent = `(지난: ${lastSet.reps}회)`;
+                                lastRecordEl.textContent = `(지난: ${weightText}kg x ${repsText}회)`;
+                            } else if (lastSet.reps) {
+                                lastRecordEl.textContent = `(지난: ${repsText}회)`;
                             } else {
                                 lastRecordEl.textContent = "(지난기록: -)";
                             }
@@ -223,7 +190,6 @@
             });
         }
 
-        
         function clearAllData() {
             if (confirm("정말 모든 훈련 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
                 try {
@@ -231,9 +197,8 @@
                     localStorage.removeItem('workoutLog_pull');
                     localStorage.removeItem('workoutLog_rest');
                     alert("모든 기록이 초기화되었습니다.");
-                    
                     ['push', 'pull', 'rest'].forEach(day => {
-                        loadWorkout(day); 
+                        loadWorkout(day);
                     });
                 } catch (e) {
                     alert("초기화에 실패했습니다.");
@@ -241,59 +206,40 @@
             }
         }
 
-        
         document.addEventListener('DOMContentLoaded', () => {
             const tabs = document.querySelectorAll('#day-navigation button');
             const days = document.querySelectorAll('.workout-day');
             
             function showDay(day) {
                 days.forEach(dayEl => {
-                    if (dayEl.id === `workout-${day}`) {
-                        dayEl.classList.add('active');
-                    } else {
-                        dayEl.classList.remove('active');
-                    }
+                    dayEl.id === `workout-${day}` ? dayEl.classList.add('active') : dayEl.classList.remove('active');
                 });
-                
                 tabs.forEach(tab => {
                     if (tab.getAttribute('data-day') === day) {
-                        tab.classList.add('tab-active');
-                        tab.classList.remove('tab-inactive');
+                        tab.classList.add('tab-active'); tab.classList.remove('tab-inactive');
                     } else {
-                        tab.classList.remove('tab-active');
-                        tab.classList.add('tab-inactive');
+                        tab.classList.remove('tab-active'); tab.classList.add('tab-inactive');
                     }
                 });
-                
                 loadWorkout(day);
             }
 
             tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const day = tab.getAttribute('data-day');
-                    showDay(day);
-                });
+                tab.addEventListener('click', () => showDay(tab.getAttribute('data-day')));
             });
 
-            
-            const today = new Date().getDay(); 
-            let dayToShow = 'rest'; 
-            
-            if (today === 1 || today === 4) { 
+            const today = new Date().getDay();
+            let dayToShow = 'rest';
+            if (today === 1 || today === 4) { // 월, 목
                 dayToShow = 'push';
-            } else if (today === 2 || today === 5) { 
+            } else if (today === 2 || today === 5) { // 화, 금
                 dayToShow = 'pull';
-            } else { 
+            } else { // 수, 토, 일
                 dayToShow = 'rest';
             }
-            
             showDay(dayToShow);
         });
     </script>
 
 </body>
 </html>
-    
-                
-                
-                
