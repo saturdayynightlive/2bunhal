@@ -11,7 +11,7 @@
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;7700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
@@ -29,7 +29,7 @@
     <main class="max-w-4xl mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">상체 집중 워크아웃 로거</h1>
-            <p class="text-lg text-slate-600">"패션근육" 2분할 (무릎 회복 ver.)</p>
+            <p class="text-lg text-slate-600">"패션근육" 2분할 (v3 - 오류 수정)</p>
         </header>
 
         <section id="workout-planner" class="mb-8 md:mb-12">
@@ -46,7 +46,7 @@
                     <h3 class="text-2xl font-bold text-indigo-600 mb-4">Push (미는 날) - 가슴/어깨/삼두</h3>
                     <p class="text-slate-600">모든 세트를 "실패지점"까지 수행하고 기록하세요.</p>
                     <div id="log-push" class="space-y-4"></div>
-                    <button onclick="saveWorkout('push')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Push 훈련 저장</Gbutton>
+                    <button onclick="saveWorkout('push')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Push 훈련 저장</button>
                 </div>
 
                 <!-- Pull (당기는 날) - 화/금 -->
@@ -70,7 +70,7 @@
     </main>
 
     <footer class="text-center p-6 mt-8 text-slate-500 text-sm">
-        <p>&copy; 2025 Workout Logger. 'fashion_muscle_routine.md' (v2) 기반.</p>
+        <p>&copy; 2025 Workout Logger. 'fashion_muscle_routine.md' (v3) 기반.</p>
         <p class="mt-2">
             <button onclick="clearAllData()" class="text-xs text-slate-400 hover:text-red-500 underline">모든 기록 초기화 (주의)</button>
         </p>
@@ -89,8 +89,7 @@
                 { id: "pull_1", name: "풀업 (or 랫풀다운)", sets: 4, reps: "8-12" },
                 { id: "pull_2", name: "T-바 로우 (or 머신 로우)", sets: 4, reps: "10-12" },
                 { id: "pull_3", name: "페이스풀 (로프)", sets: 5, reps: "15-20" },
-                { id: "pull_4", name: "(선택) 덤벨 컬", sets: 3, reps: "12-15" },
-                { id: "pull_5", name: "(선택) 케이블 푸시다운", sets: 3, reps: "12-15" }
+                { id: "pull_4", name: "(선택) 덤벨 컬", sets: 3, reps: "12-15" }
             ],
             "rest": [
                 { id: "rest_1", name: "사이클 인터벌 (HIIT)", sets: 1, reps: "20분" },
@@ -158,6 +157,7 @@
                 lastLogData = null;
             }
             const logContainer = document.getElementById(`log-${day}`);
+            if (!logContainer) return; 
             logContainer.innerHTML = '';
             dayExercises.forEach(exercise => {
                 logContainer.innerHTML += createExerciseHTML(day, exercise);
